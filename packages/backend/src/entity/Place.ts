@@ -4,26 +4,26 @@ import { Event } from './Event';
 @Entity()
 export class Place {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column()
-  address: string;
+  address!: string;
 
   @Column()
-  area: string;
+  area!: string;
 
   @Column('decimal', { precision: 10, scale: 8 })
-  latitude: number;
+  latitude!: number;
 
   @Column('decimal', { precision: 11, scale: 8 })
-  longitude: number;
+  longitude!: number;
 
   @Column('text', { nullable: true })
-  description: string;
+  description?: string;
 
   @OneToMany(() => Event, (event) => event.place)
-  events: Event[];
+  events!: Event[];
 }

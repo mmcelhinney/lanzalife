@@ -4,11 +4,11 @@ import { Event } from './Event';
 @Entity()
 export class Activity {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  name: string;
+  name!: string;
 
   @OneToMany(() => Event, (event) => event.activity)
-  events: Event[];
+  events!: Event[];
 }

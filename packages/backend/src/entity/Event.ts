@@ -5,20 +5,20 @@ import { Activity } from './Activity';
 @Entity()
 export class Event {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @ManyToOne(() => Place, (place) => place.events)
-  place: Place;
+  place!: Place;
 
   @ManyToOne(() => Activity, (activity) => activity.events)
-  activity: Activity;
+  activity!: Activity;
 
   @Column()
-  start_time: Date;
+  start_time!: Date;
 
   @Column()
-  end_time: Date;
+  end_time!: Date;
 
   @Column('text', { nullable: true })
-  description: string;
+  description?: string;
 }
