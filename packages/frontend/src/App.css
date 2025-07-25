@@ -17,38 +17,40 @@
 }
 
 .nav-tab {
-  padding: 10px 20px;
-  border: 2px solid #3498db;
-  background: white;
-  color: #3498db;
-  border-radius: 6px;
+  padding: 12px 24px;
+  border: 2px solid #007A7A;
+  background: transparent;
+  color: #007A7A;
+  border-radius: 50px;
   cursor: pointer;
   font-weight: 600;
   transition: all 0.3s ease;
 }
 
 .nav-tab:hover {
-  background: #f8f9fa;
+  background: #007A7A;
+  color: white;
 }
 
 .nav-tab.active {
-  background: #3498db;
+  background: #007A7A;
   color: white;
 }
 
 h1 {
-  color: #333;
+  color: #2c3e50;
+  font-weight: 700;
 }
 
 .selection-form {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  width: 400px;
-  padding: 25px;
+  gap: 20px;
+  width: 450px;
+  padding: 30px;
   border: 1px solid #e1e5e9;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   background: white;
   margin: 0 auto;
 }
@@ -56,65 +58,66 @@ h1 {
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
 }
 
 .form-group label {
   font-weight: 600;
   color: #555;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .radio-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 500;
   color: #555;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .radio-label input[type="radio"] {
-  width: 16px;
-  height: 16px;
-  accent-color: #3498db;
+  width: 18px;
+  height: 18px;
+  accent-color: #007A7A;
   cursor: pointer;
 }
 
 .selection-form select,
 .selection-form button {
-  padding: 10px;
-  border-radius: 4px;
+  padding: 12px;
+  border-radius: 8px;
   border: 1px solid #ddd;
   font-size: 16px;
 }
 
 .selection-form button {
-  background-color: #007bff;
+  background-color: #007A7A;
   color: white;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 .selection-form button:hover {
-  background-color: #0056b3;
+  background-color: #005A5A;
 }
 
 .search-again-btn {
-  background: #3498db;
+  background: #007A7A;
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 50px;
   font-size: 1.1rem;
   font-weight: 600;
   padding: 14px 32px;
   cursor: pointer;
   margin-top: 20px;
-  box-shadow: 0 2px 8px rgba(52,152,219,0.08);
+  box-shadow: 0 4px 12px rgba(0, 122, 122, 0.1);
   transition: background 0.2s, box-shadow 0.2s;
 }
+
 .search-again-btn:hover {
-  background: #2980b9;
-  box-shadow: 0 4px 16px rgba(52,152,219,0.12);
+  background: #005A5A;
+  box-shadow: 0 6px 16px rgba(0, 90, 90, 0.15);
 }
