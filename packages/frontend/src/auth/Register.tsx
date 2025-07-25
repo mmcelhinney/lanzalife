@@ -1,79 +1,89 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './Login.css'; // Assuming Register uses the same styles
+import { useAuth } from './AuthContext';
+import { API_BASE_URL } from '../config';
 
 interface RegisterProps {
   onSwitchToLogin: () => void;
 }
 
-const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
+export default function Register({ onSwitchToLogin }: RegisterProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [roleName, setRoleName] = useState('Guest'); // Default role
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+
     try {
-      await axios.post('http://localhost:3000/api/auth/register', {
+      await axios.post(`${API_BASE_URL}/api/auth/register`, {
         username,
         password,
-        roleName,
+        email,
+        role: 'User',
       });
       alert('Registration successful!');
-      onSwitchToLogin(); // Switch to login view after successful registration
+      onSwitchToLogin();
     } catch (error) {
       alert('Registration failed!');
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="login-container">
-      <form className="login-form" onSubmit={handleSubmit}>
+      <div className="login-box">
         <h2>Register</h2>
-        <div className="form-group">
-          <label htmlFor="reg-username">Username</label>
-          <input
-            id="reg-username"
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="reg-password">Password</label>
-          <input
-            id="reg-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="role-select">Role</label>
-          <select 
-            id="role-select" 
-            value={roleName} 
-            onChange={(e) => setRoleName(e.target.value)}
-          >
-            <option value="Guest">Guest</option>
-            <option value="Place Owner">Place Owner</option>
-          </select>
-        </div>
-        <button type="submit" className="login-button">
-          Register
-        </button>
-        <p className="switch-form-text">
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="username">Username:</label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="email">Email:</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="password">Password:</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit" disabled={loading}>
+            {loading ? 'Registering...' : 'Register'}
+          </button>
+        </form>
+        <p>
           Already have an account?{' '}
-          <a href="#" onClick={(e) => { e.preventDefault(); onSwitchToLogin(); }}>
+          <button className="link-button" onClick={onSwitchToLogin}>
             Login here
-          </a>
+          </button>
         </p>
-      </form>
+      </div>
     </div>
   );
-};
-
-export default Register;
+}

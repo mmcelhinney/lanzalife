@@ -358,8 +358,10 @@ app.get('/api/status', async (req, res) => {
 
 AppDataSource.initialize()
   .then(() => {
-    app.listen(port, () => {
-      console.log(`Backend is running on http://localhost:${port}`);
+    const portNumber = typeof port === 'string' ? parseInt(port) : port;
+    app.listen(portNumber, '0.0.0.0', () => {
+      console.log(`Backend is running on http://0.0.0.0:${portNumber}`);
+      console.log(`Backend is accessible on local network at http://[your-ip]:${portNumber}`);
     });
   })
   .catch((error) => console.log(error));

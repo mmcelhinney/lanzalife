@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../auth/AuthContext';
 import './EditEventModal.css';
+import { API_BASE_URL } from '../config';
 
 interface Place {
   id: number;
@@ -26,7 +27,14 @@ interface EditEventModalProps {
   event: Event | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (event: Omit<Event, 'id' | 'place' | 'activity'> & { placeId: number; activityId: number }) => void;
+  onSave: (event: {
+    placeId: number;
+    activityId: number;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    description: string;
+  }) => void;
 }
 
 const EditEventModal: React.FC<EditEventModalProps> = ({ event, isOpen, onClose, onSave }) => {
@@ -71,7 +79,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, isOpen, onClose,
         'Authorization': `Bearer ${token}`,
       };
       // Use the admin/places endpoint which filters by user for Place Owners
-      const response = await axios.get('http://localhost:3000/api/admin/places', { headers });
+      const response = await axios.get(`${API_BASE_URL}/api/admin/places`, { headers });
       setPlaces(response.data);
     } catch (error) {
       console.error('Error fetching places:', error);
@@ -84,7 +92,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, isOpen, onClose,
       const headers: HeadersInit = {
         'Authorization': `Bearer ${token}`,
       };
-      const response = await axios.get('http://localhost:3000/api/activities', { headers });
+      const response = await axios.get(`${API_BASE_URL}/api/activities`, { headers });
       setActivities(response.data);
     } catch (error) {
       console.error('Error fetching activities:', error);

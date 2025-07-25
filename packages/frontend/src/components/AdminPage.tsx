@@ -3,6 +3,7 @@ import './AdminPage.css';
 import EditPlaceModal from './EditPlaceModal';
 import EditEventModal from './EditEventModal';
 import { useAuth } from '../auth/AuthContext';
+import { API_BASE_URL } from '../config';
 
 // Placeholder for Activity and Event modals (to be implemented)
 // import EditActivityModal from './EditActivityModal';
@@ -72,7 +73,7 @@ export default function AdminPage({ onMenuAction }: AdminPageProps) {
       const headers: HeadersInit = {
         'Authorization': `Bearer ${token}`,
       };
-      const response = await fetch('http://localhost:3000/api/admin/places', { headers });
+      const response = await fetch(`${API_BASE_URL}/api/admin/places`, { headers });
       const data = await response.json();
       setPlaces(data);
     } catch (error) {
@@ -87,7 +88,7 @@ export default function AdminPage({ onMenuAction }: AdminPageProps) {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      const response = await fetch('http://localhost:3000/api/activities', { headers });
+      const response = await fetch(`${API_BASE_URL}/api/activities`, { headers });
       const data = await response.json();
       setActivities(data);
     } catch (error) {
@@ -101,7 +102,7 @@ export default function AdminPage({ onMenuAction }: AdminPageProps) {
       const headers: HeadersInit = {
         'Authorization': `Bearer ${token}`,
       };
-      const response = await fetch('http://localhost:3000/api/admin/events', { headers });
+      const response = await fetch(`${API_BASE_URL}/api/admin/events`, { headers });
       const data = await response.json();
       setEvents(data);
     } catch (error) {
@@ -116,7 +117,7 @@ export default function AdminPage({ onMenuAction }: AdminPageProps) {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      const response = await fetch('http://localhost:3000/api/status', { headers });
+      const response = await fetch(`${API_BASE_URL}/api/status`, { headers });
       const data = await response.json();
       setDbStatus(data);
     } catch (error) {
@@ -150,14 +151,14 @@ export default function AdminPage({ onMenuAction }: AdminPageProps) {
       let response;
       if (editingPlace) {
         // Update existing place
-        response = await fetch(`http://localhost:3000/api/places/${editingPlace.id}`, {
+        response = await fetch(`${API_BASE_URL}/api/places/${editingPlace.id}`, {
           method: 'PUT',
           headers: headers,
           body: JSON.stringify(updatedPlace),
         });
       } else {
         // Add new place
-        response = await fetch('http://localhost:3000/api/places', {
+        response = await fetch(`${API_BASE_URL}/api/places`, {
           method: 'POST',
           headers: headers,
           body: JSON.stringify(updatedPlace),
@@ -190,7 +191,14 @@ export default function AdminPage({ onMenuAction }: AdminPageProps) {
     setIsEventModalOpen(false);
     setEditingEvent(null);
   };
-  const handleSaveEvent = async (updatedEvent: Omit<Event, 'id' | 'place' | 'activity'> & { placeId: number; activityId: number }) => {
+  const handleSaveEvent = async (updatedEvent: {
+    placeId: number;
+    activityId: number;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    description: string;
+  }) => {
     try {
       const token = localStorage.getItem('token');
       const headers: HeadersInit = {
@@ -203,14 +211,14 @@ export default function AdminPage({ onMenuAction }: AdminPageProps) {
       let response;
       if (editingEvent) {
         // Update existing event
-        response = await fetch(`http://localhost:3000/api/events/${editingEvent.id}`, {
+        response = await fetch(`${API_BASE_URL}/api/events/${editingEvent.id}`, {
           method: 'PUT',
           headers: headers,
           body: JSON.stringify(updatedEvent),
         });
       } else {
         // Add new event
-        response = await fetch('http://localhost:3000/api/events', {
+        response = await fetch(`${API_BASE_URL}/api/events`, {
           method: 'POST',
           headers: headers,
           body: JSON.stringify(updatedEvent),

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './Login.css';
 import { useAuth } from './AuthContext';
+import { API_BASE_URL } from '../config';
 
 interface LoginProps {
   onSwitchToRegister: () => void;
@@ -15,7 +16,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
         username,
         password,
       });

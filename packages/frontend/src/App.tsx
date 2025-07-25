@@ -5,6 +5,7 @@ import AdminPage from './components/AdminPage';
 import Login from './auth/Login';
 import Register from './auth/Register';
 import { useAuth } from './auth/AuthContext';
+import { API_BASE_URL } from './config';
 
 interface Activity {
   id: number;
@@ -67,14 +68,14 @@ function App() {
   ];
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/activities')
+    fetch(`${API_BASE_URL}/api/activities`)
       .then((res) => res.json())
       .then((data: Activity[]) => setActivities(data))
       .catch((err) => console.error('Error fetching activities:', err));
   }, []);
 
   const handleSearch = () => {
-    let url = `http://localhost:3000/api/places?`;
+    let url = `${API_BASE_URL}/api/places?`;
     if (selectedArea && !nearMe) {
       url += `area=${selectedArea}&`;
     }
