@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './Login.css';
+import { useAuth } from './AuthContext';
 
-const Login: React.FC = () => {
+interface LoginProps {
+  onSwitchToRegister: () => void;
+}
+
+const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -12,9 +19,8 @@ const Login: React.FC = () => {
         username,
         password,
       });
-      localStorage.setItem('token', response.data.token);
+      login(response.data.token);
       alert('Login successful!');
-      // Redirect or update UI
     } catch (error) {
       alert('Login failed!');
       console.error(error);
@@ -22,18 +28,40 @@ const Login: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Login</h2>
-      <div>
-        <label>Username:</label>
-        <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
-      </div>
-      <div>
-        <label>Password:</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-      </div>
-      <button type="submit">Login</button>
-    </form>
+    <div className="login-container">
+      <form className="login-form" onSubmit={handleSubmit}>
+        <h2>Login</h2>
+        <div className="form-group">
+          <label htmlFor="username">Username</label>
+          <input
+            id="username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button type="submit" className="login-button">
+          Login
+        </button>
+        <p className="switch-form-text">
+          Don't have an account?{' '}
+          <a href="#" onClick={(e) => { e.preventDefault(); onSwitchToRegister(); }}>
+            Register here
+          </a>
+        </p>
+      </form>
+    </div>
   );
 };
 

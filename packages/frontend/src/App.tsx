@@ -29,10 +29,25 @@ function App() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [places, setPlaces] = useState<Place[]>([]);
   const [showMap, setShowMap] = useState<boolean>(false);
-  const [currentView, setCurrentView] = useState<'main' | 'admin' | 'login' | 'register'>('main');
+  const [currentView, setCurrentView] = useState<'main' | 'admin' | 'login' | 'register'>('login');
+
+  // Helper function to safely check currentView
+  const isCurrentView = (view: 'main' | 'admin' | 'login' | 'register') => currentView === view;
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
 
   const { user, logout, hasRole } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      if (hasRole('Admin')) {
+        setCurrentView('admin');
+      } else {
+        setCurrentView('main');
+      }
+    } else {
+      setCurrentView('login');
+    }
+  }, [user, hasRole]);
 
   const areas = [
     'Costa Teguise',
@@ -95,45 +110,67 @@ function App() {
     setSelectedPlaceId(placeId);
   };
 
+  const showAuth = currentView === 'login' || currentView === 'register';
+
+  // Handle hamburger menu actions from AdminPage
+  const handleHamburgerAction = (action: string) => {
+    switch (action) {
+      case 'search':
+        setCurrentView('main');
+        break;
+      case 'admin':
+        setCurrentView('admin');
+        break;
+      case 'user-admin':
+        // TODO: Implement User Admin functionality
+        console.log('User Admin clicked - functionality to be implemented');
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <div className="container">
-      <div className="header">
-        <h1>Lanzalife</h1>
-        <nav className="nav-tabs">
-          <button 
-            className={`nav-tab ${currentView === 'main' ? 'active' : ''}`}
-            onClick={() => setCurrentView('main')}
-          >
-            Search
-          </button>
-          {user && hasRole('Admin') && (
+      {!showAuth && currentView !== 'admin' && (
+        <div className="header">
+          <h1>Lanzalife</h1>
+          <nav className="nav-tabs">
             <button 
-              className={`nav-tab ${currentView === 'admin' ? 'active' : ''}`}
-              onClick={() => setCurrentView('admin')}
+              className={`nav-tab ${isCurrentView('main') ? 'active' : ''}`}
+              onClick={() => setCurrentView('main')}
             >
-              Admin
+              Search
             </button>
-          )}
-          {!user ? (
-            <>
+            {user && hasRole('Admin') && (
               <button 
-                className={`nav-tab ${currentView === 'login' ? 'active' : ''}`}
-                onClick={() => setCurrentView('login')}
+                className={`nav-tab ${isCurrentView('admin') ? 'active' : ''}`}
+                onClick={() => setCurrentView('admin')}
               >
-                Login
+                Admin
               </button>
-              <button 
-                className={`nav-tab ${currentView === 'register' ? 'active' : ''}`}
-                onClick={() => setCurrentView('register')}
-              >
-                Register
-              </button>
-            </>
-          ) : (
-            <button className="nav-tab" onClick={logout}>Logout ({user.username})</button>
-          )}
-        </nav>
-      </div>
+            )}
+            {!user ? (
+              <>
+                <button 
+                  className={`nav-tab ${isCurrentView('login') ? 'active' : ''}`}
+                  onClick={() => setCurrentView('login')}
+                >
+                  Login
+                </button>
+                <button 
+                  className={`nav-tab ${isCurrentView('register') ? 'active' : ''}`}
+                  onClick={() => setCurrentView('register')}
+                >
+                  Register
+                </button>
+              </>
+            ) : (
+              <button className="nav-tab" onClick={logout}>Logout ({user.username})</button>
+            )}
+          </nav>
+        </div>
+      )}
 
       {currentView === 'main' && (
         <>
@@ -238,9 +275,9 @@ function App() {
         </>
       )}
 
-      {currentView === 'admin' && user && hasRole('Admin') && <AdminPage />}
-      {currentView === 'login' && <Login />}
-      {currentView === 'register' && <Register />}
+      {currentView === 'admin' && user && hasRole('Admin') && <AdminPage onMenuAction={handleHamburgerAction} />}
+      {currentView === 'login' && <Login onSwitchToRegister={() => setCurrentView('register')} />}
+      {currentView === 'register' && <Register onSwitchToLogin={() => setCurrentView('login')} />}
     </div>
   );
 }

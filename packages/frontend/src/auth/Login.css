@@ -1,0 +1,100 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f4f1ea;
+  padding: 20px;
+}
+
+.login-form {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.login-form h2 {
+  margin-bottom: 25px;
+  color: #2c3e50;
+  font-size: 2em;
+  font-weight: 700;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #555;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  box-sizing: border-box; /* Ensures padding doesn't affect width */
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: #007A7A;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+  background-color: #005A5A;
+}
+
+.switch-form-text {
+  margin-top: 20px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.switch-form-text a {
+  color: #007A7A;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.switch-form-text a:hover {
+  text-decoration: underline;
+}
+
+
+/* --- Responsive Design --- */
+@media (max-width: 480px) {
+  .login-container {
+    align-items: flex-start; /* Align to top on small screens */
+    padding-top: 5vh;
+  }
+
+  .login-form {
+    padding: 25px;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+  }
+
+  .login-form h2 {
+    font-size: 1.8em;
+  }
+}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './AdminPage.css';
 import EditPlaceModal from './EditPlaceModal';
+import EditEventModal from './EditEventModal';
 import { useAuth } from '../auth/AuthContext';
 
 // Placeholder for Activity and Event modals (to be implemented)
@@ -32,7 +33,11 @@ interface Event {
   description: string;
 }
 
-export default function AdminPage() {
+interface AdminPageProps {
+  onMenuAction?: (action: string) => void;
+}
+
+export default function AdminPage({ onMenuAction }: AdminPageProps) {
   const [places, setPlaces] = useState<Place[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
@@ -46,8 +51,13 @@ export default function AdminPage() {
   // Editing state for modals
   const [editingPlace, setEditingPlace] = useState<Place | null>(null);
   const [isPlaceModalOpen, setIsPlaceModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
-  const { user, hasRole } = useAuth();
+  // Hamburger menu state
+  const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
+
+  const { user, hasRole, logout } = useAuth();
 
   useEffect(() => {
     fetchPlaces();
@@ -58,18 +68,13 @@ export default function AdminPage() {
 
   const fetchPlaces = async () => {
     try {
-      const headers: HeadersInit = {};
       const token = localStorage.getItem('token');
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      const response = await fetch('http://localhost:3000/api/places', { headers });
+      const headers: HeadersInit = {
+        'Authorization': `Bearer ${token}`,
+      };
+      const response = await fetch('http://localhost:3000/api/admin/places', { headers });
       const data = await response.json();
-      if (hasRole('Place Owner') && user) {
-        setPlaces(data.filter((place: Place) => place.userId === user.id));
-      } else {
-        setPlaces(data);
-      }
+      setPlaces(data);
     } catch (error) {
       console.error('Error fetching places:', error);
     }
@@ -92,12 +97,11 @@ export default function AdminPage() {
 
   const fetchEvents = async () => {
     try {
-      const headers: HeadersInit = {};
       const token = localStorage.getItem('token');
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      const response = await fetch('http://localhost:3000/api/events', { headers });
+      const headers: HeadersInit = {
+        'Authorization': `Bearer ${token}`,
+      };
+      const response = await fetch('http://localhost:3000/api/admin/events', { headers });
       const data = await response.json();
       setEvents(data);
     } catch (error) {
@@ -125,12 +129,15 @@ export default function AdminPage() {
     setEditingPlace(place);
     setIsPlaceModalOpen(true);
   };
+  const handleAddPlace = () => {
+    setEditingPlace(null);
+    setIsPlaceModalOpen(true);
+  };
   const handleClosePlaceModal = () => {
     setIsPlaceModalOpen(false);
     setEditingPlace(null);
   };
-  const handleSavePlace = async (updatedPlace: Omit<Place, 'id'>) => {
-    if (!editingPlace) return;
+  const handleSavePlace = async (updatedPlace: Omit<Place, 'id'> & { userId?: number }) => {
     try {
       const token = localStorage.getItem('token');
       const headers: HeadersInit = {
@@ -139,21 +146,87 @@ export default function AdminPage() {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      const response = await fetch(`http://localhost:3000/api/places/${editingPlace.id}`, {
-        method: 'PUT',
-        headers: headers,
-        body: JSON.stringify(updatedPlace),
-      });
+
+      let response;
+      if (editingPlace) {
+        // Update existing place
+        response = await fetch(`http://localhost:3000/api/places/${editingPlace.id}`, {
+          method: 'PUT',
+          headers: headers,
+          body: JSON.stringify(updatedPlace),
+        });
+      } else {
+        // Add new place
+        response = await fetch('http://localhost:3000/api/places', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(updatedPlace),
+        });
+      }
+
       if (response.ok) {
         handleClosePlaceModal();
         fetchPlaces();
-        alert('Place updated successfully!');
+        alert(`Place ${editingPlace ? 'updated' : 'added'} successfully!`);
       } else {
-        alert('Error updating place');
+        alert(`Error ${editingPlace ? 'updating' : 'adding'} place`);
       }
     } catch (error) {
-      console.error('Error updating place:', error);
-      alert('Error updating place');
+      console.error(`Error ${editingPlace ? 'updating' : 'adding'} place:`, error);
+      alert(`Error ${editingPlace ? 'updating' : 'adding'} place`);
+    }
+  };
+
+  // Event modal handlers
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event);
+    setIsEventModalOpen(true);
+  };
+  const handleAddEvent = () => {
+    setEditingEvent(null);
+    setIsEventModalOpen(true);
+  };
+  const handleCloseEventModal = () => {
+    setIsEventModalOpen(false);
+    setEditingEvent(null);
+  };
+  const handleSaveEvent = async (updatedEvent: Omit<Event, 'id' | 'place' | 'activity'> & { placeId: number; activityId: number }) => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      let response;
+      if (editingEvent) {
+        // Update existing event
+        response = await fetch(`http://localhost:3000/api/events/${editingEvent.id}`, {
+          method: 'PUT',
+          headers: headers,
+          body: JSON.stringify(updatedEvent),
+        });
+      } else {
+        // Add new event
+        response = await fetch('http://localhost:3000/api/events', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(updatedEvent),
+        });
+      }
+
+      if (response.ok) {
+        handleCloseEventModal();
+        fetchEvents();
+        alert(`Event ${editingEvent ? 'updated' : 'added'} successfully!`);
+      } else {
+        alert(`Error ${editingEvent ? 'updating' : 'adding'} event`);
+      }
+    } catch (error) {
+      console.error(`Error ${editingEvent ? 'updating' : 'adding'} event:`, error);
+      alert(`Error ${editingEvent ? 'updating' : 'adding'} event`);
     }
   };
 
@@ -182,8 +255,46 @@ export default function AdminPage() {
   // Debug: Log places data before rendering
   console.log('PLACES DATA:', places);
 
+  // Hamburger menu handlers
+  const toggleHamburgerMenu = () => {
+    setIsHamburgerOpen(!isHamburgerOpen);
+  };
+
+  const handleMenuClick = (action: string) => {
+    setIsHamburgerOpen(false);
+    if (onMenuAction) {
+      onMenuAction(action);
+    }
+  };
+
   return (
     <div className="admin-container">
+      {/* Hamburger Menu */}
+      <div className="hamburger-menu">
+        <button className="hamburger-btn" onClick={toggleHamburgerMenu}>
+          <span className="hamburger-line"></span>
+          <span className="hamburger-line"></span>
+          <span className="hamburger-line"></span>
+        </button>
+        
+        {isHamburgerOpen && (
+          <div className="hamburger-dropdown">
+            <button className="menu-item" onClick={() => handleMenuClick('search')}>
+              Search
+            </button>
+            <button className="menu-item" onClick={() => handleMenuClick('admin')}>
+              Admin
+            </button>
+            <button className="menu-item" onClick={() => handleMenuClick('user-admin')}>
+              User Admin
+            </button>
+            <button className="menu-item" onClick={logout}>
+              Logout ({user?.username})
+            </button>
+          </div>
+        )}
+      </div>
+
       <h1>Admin Panel</h1>
       <div className="status-bar">
         <div className="status-item">
@@ -200,8 +311,8 @@ export default function AdminPage() {
         </div>
       </div>
       <div className="admin-bar-buttons">
+        {hasRole('Admin') && <button className="bar-btn" onClick={openActivitiesModal}>Manage Activities</button>}
         <button className="bar-btn" onClick={openPlacesModal}>Manage Places</button>
-        <button className="bar-btn" onClick={openActivitiesModal}>Manage Activities</button>
         <button className="bar-btn" onClick={openEventsModal}>Manage Schedules</button>
       </div>
 
@@ -220,6 +331,9 @@ export default function AdminPage() {
                   <button className="edit-btn" onClick={() => handleEditPlace(place)} title="Edit">✏️</button>
                 </div>
               ))}
+            </div>
+            <div className="modal-footer">
+              <button className="add-new-btn" onClick={handleAddPlace}>Add New Place</button>
             </div>
           </div>
         </div>
@@ -257,9 +371,12 @@ export default function AdminPage() {
               {events.map(event => (
                 <div className="modal-list-item" key={event.id}>
                   {event.activity?.name} @ {event.place?.name}
-                  <button className="edit-btn" /* onClick={...} */ title="Edit">✏️</button>
+                  <button className="edit-btn" onClick={() => handleEditEvent(event)} title="Edit">✏️</button>
                 </div>
               ))}
+            </div>
+            <div className="modal-footer">
+              <button className="add-new-btn" onClick={handleAddEvent}>Add New Event</button>
             </div>
           </div>
         </div>
@@ -271,6 +388,14 @@ export default function AdminPage() {
         isOpen={isPlaceModalOpen}
         onClose={handleClosePlaceModal}
         onSave={handleSavePlace}
+      />
+
+      {/* Edit Event Modal */}
+      <EditEventModal
+        event={editingEvent}
+        isOpen={isEventModalOpen}
+        onClose={handleCloseEventModal}
+        onSave={handleSaveEvent}
       />
 
       {/* Activities and Events modals to be implemented similarly */}

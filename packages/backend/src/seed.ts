@@ -3,16 +3,55 @@ import { AppDataSource } from "./data-source";
 import { Activity } from "./entity/Activity";
 import { Place } from "./entity/Place";
 import { Event } from "./entity/Event";
+import { User } from "./entity/User";
+import { Role } from "./entity/Role";
+import * as bcrypt from 'bcryptjs';
 
 async function seed() {
   await AppDataSource.initialize();
   console.log("Data Source initialized!");
 
+  // --- Check if DB is already seeded ---
+  const userRepository = AppDataSource.getRepository(User);
+  const userCount = await userRepository.count();
+  if (userCount > 0) {
+    console.log("Database is already seeded. Exiting.");
+    await AppDataSource.destroy();
+    return;
+  }
+
   // Clear existing data
   await AppDataSource.getRepository(Event).clear();
   await AppDataSource.getRepository(Activity).clear();
   await AppDataSource.getRepository(Place).clear();
+  await AppDataSource.getRepository(User).clear();
+  await AppDataSource.getRepository(Role).clear();
   console.log("Existing data cleared.");
+
+  // --- Create Roles ---
+  const roleRepository = AppDataSource.getRepository(Role);
+  const adminRole = await roleRepository.save({ name: "Admin" });
+  const guestRole = await roleRepository.save({ name: "Guest" });
+  const placeOwnerRole = await roleRepository.save({ name: "Place Owner" });
+  console.log("Roles created: Admin, Guest, Place Owner");
+
+  // --- Create Users ---
+  const hashedPasswordAdmin = await bcrypt.hash("adminpassword", 10);
+  const hashedPasswordUser = await bcrypt.hash("userpassword", 10);
+
+  const adminUser = await userRepository.save({
+    username: "admin",
+    password: hashedPasswordAdmin,
+    role: adminRole,
+  });
+
+  const guestUser = await userRepository.save({
+    username: "user",
+    password: hashedPasswordUser,
+    role: guestRole,
+  });
+
+  console.log("Users created: admin, user");
 
   // Create Activities
   const activitiesData = [

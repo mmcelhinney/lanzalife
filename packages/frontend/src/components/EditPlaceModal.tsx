@@ -13,7 +13,7 @@ interface Place {
 }
 
 interface EditPlaceModalProps {
-  place: Place | null;
+  place?: Place | null; // Make place optional
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedPlace: Omit<Place, 'id'> & { userId?: number }) => void; // Add userId to updatedPlace type
@@ -39,17 +39,29 @@ const EditPlaceModal: React.FC<EditPlaceModalProps> = ({ place, isOpen, onClose,
   const { user, hasRole } = useAuth();
 
   React.useEffect(() => {
-    if (place) {
-      setFormData({
-        name: place.name,
-        address: place.address,
-        area: place.area,
-        latitude: place.latitude.toString(),
-        longitude: place.longitude.toString(),
-        description: place.description || ''
-      });
+    if (isOpen) { // Only reset form when modal opens
+      if (place) {
+        setFormData({
+          name: place.name,
+          address: place.address,
+          area: place.area,
+          latitude: place.latitude.toString(),
+          longitude: place.longitude.toString(),
+          description: place.description || ''
+        });
+      } else {
+        // Reset form for new place
+        setFormData({
+          name: '',
+          address: '',
+          area: '',
+          latitude: '',
+          longitude: '',
+          description: ''
+        });
+      }
     }
-  }, [place]);
+  }, [isOpen, place]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,13 +81,13 @@ const EditPlaceModal: React.FC<EditPlaceModalProps> = ({ place, isOpen, onClose,
     onSave(updatedPlace);
   };
 
-  if (!isOpen || !place) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Edit Place</h2>
+          <h2>{place ? 'Edit Place' : 'Add New Place'}</h2>
           <button className="modal-close" onClick={onClose}>
             ×
           </button>

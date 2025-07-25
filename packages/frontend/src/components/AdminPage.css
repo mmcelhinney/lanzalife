@@ -1,8 +1,80 @@
+/* Hamburger Menu Styles */
+.hamburger-menu {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.hamburger-btn {
+  background: #007A7A;
+  border: none;
+  border-radius: 4px;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.hamburger-btn:hover {
+  background: #005a5a;
+}
+
+.hamburger-line {
+  width: 20px;
+  height: 2px;
+  background: white;
+  border-radius: 1px;
+  transition: all 0.3s ease;
+}
+
+.hamburger-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 150px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.menu-item:hover {
+  background: #f8f9fa;
+}
+
+.menu-item:not(:last-child) {
+  border-bottom: 1px solid #e1e5e9;
+}
+
 .admin-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .admin-container h1 {
@@ -40,6 +112,33 @@
   font-size: 1.5rem;
   font-weight: bold;
   color: #3498db;
+}
+
+.admin-bar-buttons {
+  display: flex;
+  flex-direction: column; /* Stack the buttons vertically */
+  align-items: center; /* Center the buttons horizontally */
+  gap: 15px; /* Space between the buttons */
+  margin-bottom: 30px;
+}
+
+.bar-btn {
+  width: 80%; /* Make buttons wider */
+  max-width: 400px; /* Set a max-width for larger screens */
+  padding: 15px 20px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid #007A7A;
+  background: transparent;
+  color: #007A7A;
+}
+
+.bar-btn:hover {
+  background: #007A7A;
+  color: white;
 }
 
 .admin-sections {
@@ -340,4 +439,21 @@
 .no-events p {
   margin: 0;
   font-size: 1.1rem;
-} 
+}
+
+.add-new-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 20px;
+}
+
+.add-new-btn:hover {
+  background: #218838;
+}

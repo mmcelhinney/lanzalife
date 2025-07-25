@@ -85,7 +85,7 @@ app.put('/api/activities/:id', authenticateToken, authorizeRole(['Admin']), asyn
   }
 });
 
-app.post('/api/places', authenticateToken, authorizeRole(['Admin']), async (req: any, res) => {
+app.post('/api/places', authenticateToken, authorizeRole(['Admin', 'Place Owner']), async (req: any, res) => {
   try {
     const { name, address, area, latitude, longitude, description } = req.body;
     const userRepository = AppDataSource.getRepository(User);
@@ -144,9 +144,21 @@ app.put('/api/places/:id', authenticateToken, authorizeRole(['Admin', 'Place Own
   }
 });
 
-app.post('/api/events', authenticateToken, authorizeRole(['Admin']), async (req, res) => {
+app.post('/api/events', authenticateToken, authorizeRole(['Admin', 'Place Owner']), async (req: any, res) => {
   try {
     const { placeId, activityId, dayOfWeek, startTime, endTime, description } = req.body;
+
+    const placeRepository = AppDataSource.getRepository(Place);
+    const place = await placeRepository.findOne({ where: { id: placeId }, relations: ['user'] });
+
+    if (!place) {
+      return res.status(404).json({ error: 'Place not found' });
+    }
+
+    // If the user is a 'Place Owner', ensure they only create events for their own place
+    if (req.user.role === 'Place Owner' && place.user.id !== req.user.id) {
+      return res.status(403).json({ message: 'Forbidden: You can only create events for your own places' });
+    }
     
     // Create a date for the specified day of week
     const today = new Date();
@@ -176,6 +188,53 @@ app.post('/api/events', authenticateToken, authorizeRole(['Admin']), async (req,
   } catch (error) {
     console.error('Error creating event:', error);
     res.status(500).json({ error: 'Failed to create event' });
+  }
+});
+
+app.put('/api/events/:id', authenticateToken, authorizeRole(['Admin', 'Place Owner']), async (req: any, res) => {
+  try {
+    const { id } = req.params;
+    const { placeId, activityId, dayOfWeek, startTime, endTime, description } = req.body;
+
+    const eventRepository = AppDataSource.getRepository(Event);
+    const event = await eventRepository.findOne({ where: { id: parseInt(id) }, relations: ['place', 'place.user'] });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // If the user is a 'Place Owner', ensure they only edit events for their own places
+    if (req.user.role === 'Place Owner' && event.place.user.id !== req.user.id) {
+      return res.status(403).json({ message: 'Forbidden: You can only edit events for your own places' });
+    }
+
+    // Create a date for the specified day of week
+    const today = new Date();
+    const daysUntilTarget = (dayOfWeek - today.getDay() + 7) % 7;
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + daysUntilTarget);
+
+    // Set the time
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const [endHour, endMinute] = endTime.split(':').map(Number);
+
+    const startDateTime = new Date(targetDate);
+    startDateTime.setHours(startHour, startMinute, 0, 0);
+
+    const endDateTime = new Date(targetDate);
+    endDateTime.setHours(endHour, endMinute, 0, 0);
+
+    event.place = { id: placeId } as Place;
+    event.activity = { id: activityId } as Activity;
+    event.start_time = startDateTime;
+    event.end_time = endDateTime;
+    event.description = description;
+
+    const updatedEvent = await eventRepository.save(event);
+    res.json(updatedEvent);
+  } catch (error) {
+    console.error('Error updating event:', error);
+    res.status(500).json({ error: 'Failed to update event' });
   }
 });
 
@@ -229,6 +288,50 @@ app.get('/api/events', async (req, res) => {
   } catch (error) {
     console.error('Error fetching events:', error);
     res.status(500).json({ error: 'Failed to fetch events' });
+  }
+});
+
+// Authenticated endpoint for fetching places for the admin/place owner view
+app.get('/api/admin/places', authenticateToken, authorizeRole(['Admin', 'Place Owner']), async (req: any, res) => {
+  try {
+    const placeRepository = AppDataSource.getRepository(Place);
+    let places;
+    if (req.user.role === 'Admin') {
+      places = await placeRepository.find({ relations: ['user'] });
+    } else { // Place Owner
+      places = await placeRepository.find({ where: { user: { id: req.user.id } }, relations: ['user'] });
+    }
+    res.json(places);
+  } catch (error) {
+    console.error('Error fetching admin places:', error);
+    res.status(500).json({ error: 'Failed to fetch admin places' });
+  }
+});
+
+// Authenticated endpoint for fetching events for the admin/place owner view
+app.get('/api/admin/events', authenticateToken, authorizeRole(['Admin', 'Place Owner']), async (req: any, res) => {
+  try {
+    const eventRepository = AppDataSource.getRepository(Event);
+    let events: Event[];
+    if (req.user.role === 'Admin') {
+      events = await eventRepository.find({ relations: ['place', 'activity', 'place.user'] });
+    } else { // Place Owner
+      const userPlaces = await AppDataSource.getRepository(Place).find({ where: { user: { id: req.user.id } } });
+      const userPlaceIds = userPlaces.map(p => p.id);
+      if (userPlaceIds.length === 0) {
+        events = [];
+      } else {
+        events = await eventRepository.createQueryBuilder('event')
+          .leftJoinAndSelect('event.place', 'place')
+          .leftJoinAndSelect('event.activity', 'activity')
+          .where('event.placeId IN (:...placeIds)', { placeIds: userPlaceIds })
+          .getMany();
+      }
+    }
+    res.json(events);
+  } catch (error) {
+    console.error('Error fetching admin events:', error);
+    res.status(500).json({ error: 'Failed to fetch admin events' });
   }
 });
 
