@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import MapDisplay from './components/MapDisplay';
 import AdminPage from './components/AdminPage';
+import Login from './auth/Login';
+import Register from './auth/Register';
+import { useAuth } from './auth/AuthContext';
 
 interface Activity {
   id: number;
@@ -26,8 +29,10 @@ function App() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [places, setPlaces] = useState<Place[]>([]);
   const [showMap, setShowMap] = useState<boolean>(false);
-  const [currentView, setCurrentView] = useState<'main' | 'admin'>('main');
+  const [currentView, setCurrentView] = useState<'main' | 'admin' | 'login' | 'register'>('main');
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
+
+  const { user, logout, hasRole } = useAuth();
 
   const areas = [
     'Costa Teguise',
@@ -101,16 +106,36 @@ function App() {
           >
             Search
           </button>
-          <button 
-            className={`nav-tab ${currentView === 'admin' ? 'active' : ''}`}
-            onClick={() => setCurrentView('admin')}
-          >
-            Admin
-          </button>
+          {user && hasRole('Admin') && (
+            <button 
+              className={`nav-tab ${currentView === 'admin' ? 'active' : ''}`}
+              onClick={() => setCurrentView('admin')}
+            >
+              Admin
+            </button>
+          )}
+          {!user ? (
+            <>
+              <button 
+                className={`nav-tab ${currentView === 'login' ? 'active' : ''}`}
+                onClick={() => setCurrentView('login')}
+              >
+                Login
+              </button>
+              <button 
+                className={`nav-tab ${currentView === 'register' ? 'active' : ''}`}
+                onClick={() => setCurrentView('register')}
+              >
+                Register
+              </button>
+            </>
+          ) : (
+            <button className="nav-tab" onClick={logout}>Logout ({user.username})</button>
+          )}
         </nav>
       </div>
 
-      {currentView === 'main' ? (
+      {currentView === 'main' && (
         <>
           {!showMap ? (
             <div className="selection-form">
@@ -211,9 +236,11 @@ function App() {
             </>
           )}
         </>
-      ) : (
-        <AdminPage />
       )}
+
+      {currentView === 'admin' && user && hasRole('Admin') && <AdminPage />}
+      {currentView === 'login' && <Login />}
+      {currentView === 'register' && <Register />}
     </div>
   );
 }

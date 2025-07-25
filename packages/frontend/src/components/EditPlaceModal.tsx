@@ -1,5 +1,6 @@
 import React from 'react';
 import './EditPlaceModal.css';
+import { useAuth } from '../auth/AuthContext';
 
 interface Place {
   id: number;
@@ -15,7 +16,7 @@ interface EditPlaceModalProps {
   place: Place | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedPlace: Omit<Place, 'id'>) => void;
+  onSave: (updatedPlace: Omit<Place, 'id'> & { userId?: number }) => void; // Add userId to updatedPlace type
 }
 
 const AREAS = [
@@ -35,6 +36,8 @@ const EditPlaceModal: React.FC<EditPlaceModalProps> = ({ place, isOpen, onClose,
     description: ''
   });
 
+  const { user, hasRole } = useAuth();
+
   React.useEffect(() => {
     if (place) {
       setFormData({
@@ -50,14 +53,20 @@ const EditPlaceModal: React.FC<EditPlaceModalProps> = ({ place, isOpen, onClose,
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
+    const updatedPlace: Omit<Place, 'id'> & { userId?: number } = {
       name: formData.name,
       address: formData.address,
       area: formData.area,
       latitude: parseFloat(formData.latitude),
       longitude: parseFloat(formData.longitude),
       description: formData.description
-    });
+    };
+
+    if (user && hasRole('Place Owner')) {
+      updatedPlace.userId = user.id;
+    }
+
+    onSave(updatedPlace);
   };
 
   if (!isOpen || !place) return null;

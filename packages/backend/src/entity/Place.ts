@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne } from 'typeorm';
 import { Event } from './Event';
+import { User } from './User';
 
 @Entity()
 export class Place {
@@ -23,6 +24,9 @@ export class Place {
 
   @Column('text', { nullable: true })
   description?: string;
+
+  @ManyToOne(() => User, (user) => user.places)
+  user!: User;
 
   @OneToMany(() => Event, (event) => event.place)
   events!: Event[];

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './AdminPage.css';
 import EditPlaceModal from './EditPlaceModal';
+import { useAuth } from '../auth/AuthContext';
 
 // Placeholder for Activity and Event modals (to be implemented)
 // import EditActivityModal from './EditActivityModal';
@@ -19,6 +20,7 @@ interface Place {
   latitude: number;
   longitude: number;
   description?: string;
+  userId?: number; // Add userId to Place interface
 }
 
 interface Event {
@@ -45,6 +47,8 @@ export default function AdminPage() {
   const [editingPlace, setEditingPlace] = useState<Place | null>(null);
   const [isPlaceModalOpen, setIsPlaceModalOpen] = useState(false);
 
+  const { user, hasRole } = useAuth();
+
   useEffect(() => {
     fetchPlaces();
     fetchActivities();
@@ -54,9 +58,18 @@ export default function AdminPage() {
 
   const fetchPlaces = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/places');
+      const headers: HeadersInit = {};
+      const token = localStorage.getItem('token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const response = await fetch('http://localhost:3000/api/places', { headers });
       const data = await response.json();
-      setPlaces(data);
+      if (hasRole('Place Owner') && user) {
+        setPlaces(data.filter((place: Place) => place.userId === user.id));
+      } else {
+        setPlaces(data);
+      }
     } catch (error) {
       console.error('Error fetching places:', error);
     }
@@ -64,7 +77,12 @@ export default function AdminPage() {
 
   const fetchActivities = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/activities');
+      const headers: HeadersInit = {};
+      const token = localStorage.getItem('token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const response = await fetch('http://localhost:3000/api/activities', { headers });
       const data = await response.json();
       setActivities(data);
     } catch (error) {
@@ -74,7 +92,12 @@ export default function AdminPage() {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/events');
+      const headers: HeadersInit = {};
+      const token = localStorage.getItem('token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const response = await fetch('http://localhost:3000/api/events', { headers });
       const data = await response.json();
       setEvents(data);
     } catch (error) {
@@ -84,7 +107,12 @@ export default function AdminPage() {
 
   const fetchStatus = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/status');
+      const headers: HeadersInit = {};
+      const token = localStorage.getItem('token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const response = await fetch('http://localhost:3000/api/status', { headers });
       const data = await response.json();
       setDbStatus(data);
     } catch (error) {
@@ -104,9 +132,16 @@ export default function AdminPage() {
   const handleSavePlace = async (updatedPlace: Omit<Place, 'id'>) => {
     if (!editingPlace) return;
     try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       const response = await fetch(`http://localhost:3000/api/places/${editingPlace.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify(updatedPlace),
       });
       if (response.ok) {

@@ -2,6 +2,8 @@ import { DataSource } from 'typeorm';
 import { Place } from './entity/Place';
 import { Activity } from './entity/Activity';
 import { Event } from './entity/Event';
+import { User } from './entity/User';
+import { Role } from './entity/Role';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -11,7 +13,7 @@ export const AppDataSource = new DataSource({
   url: process.env.DATABASE_URL,
   synchronize: true,
   logging: false,
-  entities: [Place, Activity, Event],
+  entities: [Place, Activity, Event, User, Role],
   migrations: [],
   subscribers: [],
 });

@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import type { LeafletEvent } from 'leaflet';
 
 // Fix for default icon not showing
 // @ts-ignore
