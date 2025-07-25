@@ -100,3 +100,21 @@ h1 {
 .selection-form button:hover {
   background-color: #0056b3;
 }
+
+.search-again-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 14px 32px;
+  cursor: pointer;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(52,152,219,0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.search-again-btn:hover {
+  background: #2980b9;
+  box-shadow: 0 4px 16px rgba(52,152,219,0.12);
+}

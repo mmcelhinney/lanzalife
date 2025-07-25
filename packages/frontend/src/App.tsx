@@ -27,6 +27,7 @@ function App() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [showMap, setShowMap] = useState<boolean>(false);
   const [currentView, setCurrentView] = useState<'main' | 'admin'>('main');
+  const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
 
   const areas = [
     'Costa Teguise',
@@ -74,8 +75,19 @@ function App() {
       .then((data: Place[]) => {
         setPlaces(data);
         setShowMap(true);
+        setSelectedPlaceId(null);
       })
       .catch((err) => console.error('Error fetching places:', err));
+  };
+
+  const handleSearchAgain = () => {
+    setShowMap(false);
+    setSelectedPlaceId(null);
+  };
+
+  // Table row pin click handler
+  const handlePinClick = (placeId: number) => {
+    setSelectedPlaceId(placeId);
   };
 
   return (
@@ -165,7 +177,38 @@ function App() {
               <button onClick={handleSearch}>Search</button>
             </div>
           ) : (
-            <MapDisplay places={places} />
+            <>
+              <MapDisplay places={places} selectedPlaceId={selectedPlaceId} />
+              {places.length > 0 && (
+                <div className="results-table-container">
+                  <table className="results-table">
+                    <thead>
+                      <tr>
+                        <th>Place</th>
+                        <th>Area</th>
+                        <th>Pin</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {places.map((place) => (
+                        <tr key={place.id} className={selectedPlaceId === place.id ? 'selected-row' : ''}>
+                          <td>{place.name}</td>
+                          <td>{place.area}</td>
+                          <td>
+                            <button className="pin-btn" onClick={() => handlePinClick(place.id)} title="Locate on map">
+                              📍
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <div style={{ textAlign: 'center', margin: '2rem 0' }}>
+                <button className="search-again-btn" onClick={handleSearchAgain}>Search Again</button>
+              </div>
+            </>
           )}
         </>
       ) : (
