@@ -11,15 +11,6 @@ async function seed() {
   await AppDataSource.initialize();
   console.log("Data Source initialized!");
 
-  // --- Check if DB is already seeded ---
-  const userRepository = AppDataSource.getRepository(User);
-  const userCount = await userRepository.count();
-  if (userCount > 0) {
-    console.log("Database is already seeded. Exiting.");
-    await AppDataSource.destroy();
-    return;
-  }
-
   // Clear existing data
   await AppDataSource.getRepository(Event).clear();
   await AppDataSource.getRepository(Activity).clear();
@@ -36,11 +27,11 @@ async function seed() {
   console.log("Roles created: Admin, Guest, Place Owner");
 
   // --- Create Users ---
-  const hashedPasswordAdmin = await bcrypt.hash("adminpassword", 10);
+  const hashedPasswordAdmin = await bcrypt.hash("PLokijuh!0", 10);
   const hashedPasswordUser = await bcrypt.hash("userpassword", 10);
 
   const adminUser = await userRepository.save({
-    username: "admin",
+    username: "marc_admin",
     password: hashedPasswordAdmin,
     role: adminRole,
   });

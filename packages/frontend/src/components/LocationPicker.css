@@ -1,0 +1,37 @@
+.location-picker {
+  margin: 10px 0;
+}
+
+.location-picker-instructions {
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.location-picker-instructions p {
+  margin: 0;
+  font-size: 14px;
+  color: #495057;
+}
+
+.selected-coordinates {
+  font-weight: 500;
+  color: #28a745 !important;
+}
+
+.location-picker-map {
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+/* Ensure the map container has proper styling */
+.leaflet-container {
+  font-family: inherit;
+}
+
+/* Custom marker styling if needed */
+.leaflet-marker-icon {
+  cursor: pointer;
+}

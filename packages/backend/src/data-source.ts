@@ -4,13 +4,14 @@ import { Activity } from './entity/Activity';
 import { Event } from './entity/Event';
 import { User } from './entity/User';
 import { Role } from './entity/Role';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
-  url: process.env.DATABASE_URL,
+  host: 'localhost',
+  port: 3306,
+  username: 'root',
+  password: 'MynewPass123',
+  database: 'lanzalife',
   synchronize: true,
   logging: false,
   entities: [Place, Activity, Event, User, Role],

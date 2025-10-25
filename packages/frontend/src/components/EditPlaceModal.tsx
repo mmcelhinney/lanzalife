@@ -1,6 +1,8 @@
 import React from 'react';
 import './EditPlaceModal.css';
+import './LocationPicker.css';
 import { useAuth } from '../auth/AuthContext';
+import LocationPicker from './LocationPicker';
 
 interface Place {
   id: number;
@@ -31,8 +33,8 @@ const EditPlaceModal: React.FC<EditPlaceModalProps> = ({ place, isOpen, onClose,
     name: '',
     address: '',
     area: '',
-    latitude: '',
-    longitude: '',
+    latitude: 0,
+    longitude: 0,
     description: ''
   });
 
@@ -45,8 +47,8 @@ const EditPlaceModal: React.FC<EditPlaceModalProps> = ({ place, isOpen, onClose,
           name: place.name,
           address: place.address,
           area: place.area,
-          latitude: place.latitude.toString(),
-          longitude: place.longitude.toString(),
+          latitude: place.latitude,
+          longitude: place.longitude,
           description: place.description || ''
         });
       } else {
@@ -55,8 +57,8 @@ const EditPlaceModal: React.FC<EditPlaceModalProps> = ({ place, isOpen, onClose,
           name: '',
           address: '',
           area: '',
-          latitude: '',
-          longitude: '',
+          latitude: 0,
+          longitude: 0,
           description: ''
         });
       }
@@ -69,8 +71,8 @@ const EditPlaceModal: React.FC<EditPlaceModalProps> = ({ place, isOpen, onClose,
       name: formData.name,
       address: formData.address,
       area: formData.area,
-      latitude: parseFloat(formData.latitude),
-      longitude: parseFloat(formData.longitude),
+      latitude: formData.latitude,
+      longitude: formData.longitude,
       description: formData.description
     };
 
@@ -79,6 +81,14 @@ const EditPlaceModal: React.FC<EditPlaceModalProps> = ({ place, isOpen, onClose,
     }
 
     onSave(updatedPlace);
+  };
+
+  const handleLocationSelect = (latitude: number, longitude: number) => {
+    setFormData(prev => ({
+      ...prev,
+      latitude,
+      longitude
+    }));
   };
 
   if (!isOpen) return null;
@@ -131,30 +141,14 @@ const EditPlaceModal: React.FC<EditPlaceModalProps> = ({ place, isOpen, onClose,
             </select>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="modal-place-latitude">Latitude:</label>
-              <input
-                type="number"
-                id="modal-place-latitude"
-                step="any"
-                value={formData.latitude}
-                onChange={(e) => setFormData(prev => ({ ...prev, latitude: e.target.value }))}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="modal-place-longitude">Longitude:</label>
-              <input
-                type="number"
-                id="modal-place-longitude"
-                step="any"
-                value={formData.longitude}
-                onChange={(e) => setFormData(prev => ({ ...prev, longitude: e.target.value }))}
-                required
-              />
-            </div>
+          <div className="form-group">
+            <label>Location:</label>
+            <LocationPicker
+              initialLatitude={formData.latitude || undefined}
+              initialLongitude={formData.longitude || undefined}
+              onLocationSelect={handleLocationSelect}
+              height="250px"
+            />
           </div>
 
           <div className="form-group">
