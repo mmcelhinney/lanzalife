@@ -29,20 +29,39 @@ async function seed() {
   // --- Create Users ---
   const hashedPasswordAdmin = await bcrypt.hash("PLokijuh!0", 10);
   const hashedPasswordUser = await bcrypt.hash("userpassword", 10);
+  const hashedPasswordOwner = await bcrypt.hash("owner123", 10);
 
   const adminUser = await userRepository.save({
     username: "marc_admin",
     password: hashedPasswordAdmin,
+    firstName: "Marc",
+    lastName: "Admin",
+    telephone: "+34 123 456 789",
+    email: "marc.admin@lanzalife.com",
     role: adminRole,
   });
 
   const guestUser = await userRepository.save({
     username: "user",
     password: hashedPasswordUser,
+    firstName: "Guest",
+    lastName: "User",
+    telephone: "+34 987 654 321",
+    email: "guest.user@lanzalife.com",
     role: guestRole,
   });
 
-  console.log("Users created: admin, user");
+  const placeOwnerUser = await userRepository.save({
+    username: "owner",
+    password: hashedPasswordOwner,
+    firstName: "Place",
+    lastName: "Owner",
+    telephone: "+34 555 123 456",
+    email: "place.owner@lanzalife.com",
+    role: placeOwnerRole,
+  });
+
+  console.log("Users created: marc_admin, user, owner");
 
   // Create Activities
   const activitiesData = [
@@ -68,6 +87,7 @@ async function seed() {
       latitude: 28.920298329660845,
       longitude: -13.645361489015826,
       description: "Popular bar with breakfast, quiz nights, and bingo.",
+      user: adminUser, // Assign to admin
     },
     {
       name: "The Irish Rover",
@@ -100,6 +120,15 @@ async function seed() {
       latitude: 28.8600,
       longitude: -13.8200,
       description: "Beach bar with stunning views.",
+    },
+    {
+      name: "Owner's Place",
+      address: "Calle Example, 123",
+      area: "Costa Teguise",
+      latitude: 28.9800,
+      longitude: -13.5400,
+      description: "A place owned by the Place Owner user.",
+      user: placeOwnerUser, // Assign to place owner
     },
   ];
 

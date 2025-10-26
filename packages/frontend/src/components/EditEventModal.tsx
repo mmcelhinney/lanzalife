@@ -30,22 +30,29 @@ interface EditEventModalProps {
   onSave: (event: {
     placeId: number;
     activityId: number;
-    dayOfWeek: number;
+    selectedDays: number[];
     startTime: string;
     endTime: string;
     description: string;
   }) => void;
+  activities?: Activity[];
+  places?: Place[];
+  selectedPlace?: Place | null;
 }
 
-const EditEventModal: React.FC<EditEventModalProps> = ({ event, isOpen, onClose, onSave }) => {
+const EditEventModal: React.FC<EditEventModalProps> = ({ event, isOpen, onClose, onSave, activities = [], places = [], selectedPlace = null }) => {
   const [placeId, setPlaceId] = useState<number | string>('');
   const [activityId, setActivityId] = useState<number | string>('');
-  const [dayOfWeek, setDayOfWeek] = useState<number | string>('');
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [description, setDescription] = useState('');
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const [localPlaces, setLocalPlaces] = useState<Place[]>([]);
+  const [localActivities, setLocalActivities] = useState<Activity[]>([]);
+  
+  // Use passed props or local state
+  const currentPlaces = places.length > 0 ? places : localPlaces;
+  const currentActivities = activities.length > 0 ? activities : localActivities;
 
   const { user, hasRole } = useAuth();
 
@@ -54,15 +61,15 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, isOpen, onClose,
       if (event) {
         setPlaceId(event.place.id);
         setActivityId(event.activity.id);
-        setDayOfWeek(new Date(event.start_time).getDay());
+        setSelectedDays([new Date(event.start_time).getDay()]);
         setStartTime(new Date(event.start_time).toTimeString().slice(0, 5));
         setEndTime(new Date(event.end_time).toTimeString().slice(0, 5));
         setDescription(event.description);
       } else {
         // Reset form for new event
-        setPlaceId('');
+        setPlaceId(selectedPlace ? selectedPlace.id : '');
         setActivityId('');
-        setDayOfWeek('');
+        setSelectedDays([]);
         setStartTime('');
         setEndTime('');
         setDescription('');
@@ -70,7 +77,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, isOpen, onClose,
       fetchPlaces();
       fetchActivities();
     }
-  }, [isOpen, event]);
+  }, [isOpen, event, selectedPlace]);
 
   const fetchPlaces = async () => {
     try {
@@ -99,17 +106,25 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, isOpen, onClose,
     }
   };
 
+  const handleDayToggle = (day: number) => {
+    setSelectedDays(prev => 
+      prev.includes(day) 
+        ? prev.filter(d => d !== day)
+        : [...prev, day]
+    );
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!placeId || !activityId || !dayOfWeek || !startTime || !endTime || !description) {
-      alert('Please fill in all fields.');
+    if (!placeId || !activityId || selectedDays.length === 0 || !startTime || !endTime) {
+      alert('Please fill in all required fields and select at least one day.');
       return;
     }
 
     onSave({
       placeId: Number(placeId),
       activityId: Number(activityId),
-      dayOfWeek: Number(dayOfWeek),
+      selectedDays: selectedDays,
       startTime,
       endTime,
       description,
@@ -129,10 +144,16 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, isOpen, onClose,
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h2>{event ? 'Edit Event' : 'Add Event'}</h2>
-        <form onSubmit={handleSubmit}>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>{event ? 'Edit Event' : 'Add Event'}</h2>
+          <button className="modal-close" onClick={onClose}>
+            ×
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
             <label htmlFor="event-place">Place:</label>
             <select
@@ -140,16 +161,17 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, isOpen, onClose,
               value={placeId}
               onChange={(e) => setPlaceId(Number(e.target.value))}
               required
-              disabled={hasRole('Place Owner') && event !== null} // Disable if editing and is Place Owner
+              disabled={hasRole('Place Owner') && event !== null || (hasRole('Place Owner') && selectedPlace !== null)}
             >
               <option value="">Select a Place</option>
-              {places.map((p) => (
+              {currentPlaces.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
                 </option>
               ))}
             </select>
           </div>
+
           <div className="form-group">
             <label htmlFor="event-activity">Activity:</label>
             <select
@@ -159,61 +181,84 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, isOpen, onClose,
               required
             >
               <option value="">Select an Activity</option>
-              {activities.map((a) => (
+              {currentActivities.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.name}
                 </option>
               ))}
             </select>
           </div>
+
           <div className="form-group">
-            <label htmlFor="event-day">Day of Week:</label>
-            <select
-              id="event-day"
-              value={dayOfWeek}
-              onChange={(e) => setDayOfWeek(Number(e.target.value))}
-              required
-            >
-              <option value="">Select Day</option>
+            <label>Select Days (you can choose multiple):</label>
+            {selectedDays.length > 0 && (
+              <div className="selected-days-info">
+                {selectedDays.length} day{selectedDays.length > 1 ? 's' : ''} selected
+              </div>
+            )}
+            <div className="day-selector">
               {daysOfWeek.map((day) => (
-                <option key={day.value} value={day.value}>
-                  {day.label}
-                </option>
+                <div
+                  key={day.value}
+                  className={`day-option ${selectedDays.includes(day.value) ? 'selected' : ''}`}
+                  onClick={() => handleDayToggle(day.value)}
+                >
+                  <input
+                    type="checkbox"
+                    id={`day-${day.value}`}
+                    checked={selectedDays.includes(day.value)}
+                    onChange={() => handleDayToggle(day.value)}
+                  />
+                  <label htmlFor={`day-${day.value}`}>
+                    <div className="day-name">{day.label.slice(0, 3)}</div>
+                    <div className="day-number">{day.value === 0 ? 'S' : day.value}</div>
+                  </label>
+                </div>
               ))}
-            </select>
+            </div>
           </div>
-          <div className="form-group">
-            <label htmlFor="event-start-time">Start Time:</label>
-            <input
-              id="event-start-time"
-              type="time"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              required
-            />
+
+          <div className="time-row">
+            <div className="form-group">
+              <label htmlFor="event-start-time">Start Time:</label>
+              <input
+                id="event-start-time"
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="event-end-time">End Time:</label>
+              <input
+                id="event-end-time"
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                required
+              />
+            </div>
           </div>
+
           <div className="form-group">
-            <label htmlFor="event-end-time">End Time:</label>
-            <input
-              id="event-end-time"
-              type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="event-description">Description:</label>
+            <label htmlFor="event-description">Description (Optional):</label>
             <textarea
               id="event-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              required
+              rows={3}
+              placeholder="Add any additional details about this event..."
             />
           </div>
-          <div className="form-buttons">
-            <button type="submit" className="submit-btn">Save</button>
-            <button type="button" className="cancel-btn" onClick={onClose}>Cancel</button>
+
+          <div className="modal-actions">
+            <button type="button" onClick={onClose} className="cancel-btn">
+              Cancel
+            </button>
+            <button type="submit" className="save-btn">
+              {event ? 'Update Event' : 'Create Event'}
+            </button>
           </div>
         </form>
       </div>

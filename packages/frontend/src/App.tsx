@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import MapDisplay from './components/MapDisplay';
 import AdminPage from './components/AdminPage';
+import PlaceOwnerPage from './components/PlaceOwnerPage';
 import Login from './auth/Login';
 import Register from './auth/Register';
 import { useAuth } from './auth/AuthContext';
@@ -30,10 +31,10 @@ function App() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [places, setPlaces] = useState<Place[]>([]);
   const [showMap, setShowMap] = useState<boolean>(false);
-  const [currentView, setCurrentView] = useState<'main' | 'admin' | 'login' | 'register'>('login');
+  const [currentView, setCurrentView] = useState<'main' | 'admin' | 'place-owner' | 'login' | 'register'>('login');
 
   // Helper function to safely check currentView
-  const isCurrentView = (view: 'main' | 'admin' | 'login' | 'register') => currentView === view;
+  const isCurrentView = (view: 'main' | 'admin' | 'place-owner' | 'login' | 'register') => currentView === view;
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
 
   const { user, logout, hasRole } = useAuth();
@@ -42,6 +43,8 @@ function App() {
     if (user) {
       if (hasRole('Admin')) {
         setCurrentView('admin');
+      } else if (hasRole('Place Owner')) {
+        setCurrentView('place-owner');
       } else {
         setCurrentView('main');
       }
@@ -133,7 +136,7 @@ function App() {
 
   return (
     <div className="container">
-      {!showAuth && currentView !== 'admin' && (
+      {!showAuth && currentView !== 'admin' && currentView !== 'place-owner' && (
         <div className="header">
           <h1>Lanzalife</h1>
           <nav className="nav-tabs">
@@ -149,6 +152,14 @@ function App() {
                 onClick={() => setCurrentView('admin')}
               >
                 Admin
+              </button>
+            )}
+            {user && hasRole('Place Owner') && (
+              <button 
+                className={`nav-tab ${isCurrentView('place-owner') ? 'active' : ''}`}
+                onClick={() => setCurrentView('place-owner')}
+              >
+                Manage Places
               </button>
             )}
             {!user ? (
@@ -277,6 +288,7 @@ function App() {
       )}
 
       {currentView === 'admin' && user && hasRole('Admin') && <AdminPage onMenuAction={handleHamburgerAction} />}
+      {currentView === 'place-owner' && user && hasRole('Place Owner') && <PlaceOwnerPage onMenuAction={handleHamburgerAction} />}
       {currentView === 'login' && <Login onSwitchToRegister={() => setCurrentView('register')} />}
       {currentView === 'register' && <Register onSwitchToLogin={() => setCurrentView('login')} />}
     </div>

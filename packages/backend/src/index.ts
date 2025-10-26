@@ -7,6 +7,7 @@ import { Place } from './entity/Place';
 import { Event } from './entity/Event';
 import { User } from './entity/User';
 import authRoutes from './routes/auth';
+import userRoutes from './routes/users';
 import * as jwt from 'jsonwebtoken';
 import { authorizeRole } from './middleware/authorize';
 
@@ -31,9 +32,6 @@ app.use((req, res, next) => {
   }
 });
 
-// Auth routes
-app.use('/api/auth', authRoutes);
-
 // Middleware to protect routes
 const authenticateToken = (req: any, res: any, next: any) => {
   const authHeader = req.headers['authorization'];
@@ -47,6 +45,12 @@ const authenticateToken = (req: any, res: any, next: any) => {
     next();
   });
 };
+
+// Auth routes
+app.use('/api/auth', authRoutes);
+
+// User routes
+app.use('/api/users', authenticateToken, authorizeRole(['Admin']), userRoutes);
 
 // Admin API endpoints - protected
 app.post('/api/activities', authenticateToken, authorizeRole(['Admin']), async (req, res) => {

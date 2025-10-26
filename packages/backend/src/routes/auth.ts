@@ -9,7 +9,7 @@ const router = Router();
 
 // Register a new user
 router.post('/register', async (req, res) => {
-  const { username, password, roleName } = req.body;
+  const { username, password, roleName, firstName, lastName, telephone, email } = req.body;
 
   const userRepository = AppDataSource.getRepository(User);
   const roleRepository = AppDataSource.getRepository(Role);
@@ -29,6 +29,10 @@ router.post('/register', async (req, res) => {
     const user = new User();
     user.username = username;
     user.password = hashedPassword;
+    user.firstName = firstName || '';
+    user.lastName = lastName || '';
+    user.telephone = telephone || null;
+    user.email = email || null;
     user.role = role;
 
     await userRepository.save(user);

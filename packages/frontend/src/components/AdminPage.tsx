@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import './AdminPage.css';
 import EditPlaceModal from './EditPlaceModal';
 import EditEventModal from './EditEventModal';
+import UserAdminModal from './UserAdminModal';
+import UserSearch from './UserSearch';
+import UserDetailsModal from './UserDetailsModal';
+import Notification from './Notification';
 import { useAuth } from '../auth/AuthContext';
 import { API_BASE_URL } from '../config';
 
@@ -34,6 +38,16 @@ interface Event {
   description: string;
 }
 
+interface UserData {
+  id?: number;
+  firstName: string;
+  lastName: string;
+  username: string;
+  role: string;
+  telephone: string;
+  password?: string;
+}
+
 interface AdminPageProps {
   onMenuAction?: (action: string) => void;
 }
@@ -48,6 +62,23 @@ export default function AdminPage({ onMenuAction }: AdminPageProps) {
   const [showPlacesModal, setShowPlacesModal] = useState(false);
   const [showActivitiesModal, setShowActivitiesModal] = useState(false);
   const [showEventsModal, setShowEventsModal] = useState(false);
+  const [showUserAdminModal, setShowUserAdminModal] = useState(false);
+  const [showUserSearch, setShowUserSearch] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserData | null>(null);
+  const [isEditUser, setIsEditUser] = useState(false);
+  const [showUserDetails, setShowUserDetails] = useState(false);
+  const [viewingUser, setViewingUser] = useState<UserData | null>(null);
+  
+  // Notification state
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'warning';
+    isVisible: boolean;
+  }>({
+    message: '',
+    type: 'info',
+    isVisible: false
+  });
 
   // Editing state for modals
   const [editingPlace, setEditingPlace] = useState<Place | null>(null);
@@ -270,9 +301,124 @@ export default function AdminPage({ onMenuAction }: AdminPageProps) {
 
   const handleMenuClick = (action: string) => {
     setIsHamburgerOpen(false);
-    if (onMenuAction) {
+    if (action === 'user-admin') {
+      setShowUserSearch(true);
+    } else if (onMenuAction) {
       onMenuAction(action);
     }
+  };
+
+  const handleCreateUser = async (userData: UserData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          username: userData.username,
+          password: userData.password || 'TempPassword123!',
+          roleName: userData.role,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          telephone: userData.telephone,
+          email: userData.email
+        })
+      });
+
+      if (response.ok) {
+        showNotification('User created successfully!', 'success');
+        setShowUserAdminModal(false);
+        setShowUserSearch(true); // Return to user search
+      } else {
+        const errorData = await response.json();
+        showNotification(`Error creating user: ${errorData.message || 'Unknown error'}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error creating user:', error);
+      showNotification('Error creating user. Please try again.', 'error');
+    }
+  };
+
+  const handleEditUser = (user: UserData) => {
+    setEditingUser(user);
+    setIsEditUser(true);
+    setShowUserAdminModal(true);
+    setShowUserSearch(false); // Close the user search overlay
+  };
+
+  const handleUpdateUser = async (userData: UserData) => {
+    try {
+      const updateData: any = {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        username: userData.username,
+        roleName: userData.role,
+        telephone: userData.telephone,
+        email: userData.email
+      };
+
+      // Only include password if it's provided
+      if (userData.password && userData.password.trim()) {
+        updateData.password = userData.password;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/users/${userData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      if (response.ok) {
+        showNotification('User updated successfully!', 'success');
+        setShowUserAdminModal(false);
+        setEditingUser(null);
+        setIsEditUser(false);
+        setShowUserSearch(true); // Return to user search
+      } else {
+        const errorData = await response.json();
+        showNotification(`Error updating user: ${errorData.message || 'Unknown error'}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      showNotification('Error updating user. Please try again.', 'error');
+    }
+  };
+
+  const handleSaveUser = (userData: UserData) => {
+    if (isEditUser) {
+      handleUpdateUser(userData);
+    } else {
+      handleCreateUser(userData);
+    }
+  };
+
+  const handleCreateNewUser = () => {
+    setEditingUser(null);
+    setIsEditUser(false);
+    setShowUserAdminModal(true);
+    setShowUserSearch(false); // Close the user search overlay
+  };
+
+  const handleViewUser = (user: UserData) => {
+    setViewingUser(user);
+    setShowUserDetails(true);
+  };
+
+  const showNotification = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
+    setNotification({
+      message,
+      type,
+      isVisible: true
+    });
+  };
+
+  const hideNotification = () => {
+    setNotification(prev => ({ ...prev, isVisible: false }));
   };
 
   return (
@@ -404,6 +550,62 @@ export default function AdminPage({ onMenuAction }: AdminPageProps) {
         isOpen={isEventModalOpen}
         onClose={handleCloseEventModal}
         onSave={handleSaveEvent}
+      />
+
+      <UserAdminModal
+        isOpen={showUserAdminModal}
+        onClose={() => {
+          setShowUserAdminModal(false);
+          setEditingUser(null);
+          setIsEditUser(false);
+          // If we were editing, return to user search
+          if (isEditUser) {
+            setShowUserSearch(true);
+          }
+        }}
+        onSave={handleSaveUser}
+        user={editingUser}
+        isEdit={isEditUser}
+      />
+
+      {showUserSearch && (
+        <div className="user-search-overlay">
+          <div className="user-search-wrapper">
+            <div className="user-search-header">
+              <h2>User Management</h2>
+              <div className="user-search-actions">
+                <button onClick={handleCreateNewUser} className="create-user-btn">
+                  + Create New User
+                </button>
+                <button onClick={() => setShowUserSearch(false)} className="close-search-btn">
+                  ×
+                </button>
+              </div>
+            </div>
+            <UserSearch
+              onEditUser={handleEditUser}
+              onRefresh={() => {}}
+              onViewUser={handleViewUser}
+              onShowNotification={showNotification}
+            />
+          </div>
+        </div>
+      )}
+
+      <UserDetailsModal
+        isOpen={showUserDetails}
+        onClose={() => {
+          setShowUserDetails(false);
+          setViewingUser(null);
+        }}
+        user={viewingUser}
+      />
+
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        isVisible={notification.isVisible}
+        onClose={hideNotification}
       />
 
       {/* Activities and Events modals to be implemented similarly */}
