@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { API_BASE_URL } from '../config';
 
 // Fix for default icon not showing
 // @ts-ignore
@@ -31,6 +32,22 @@ interface MapDisplayProps {
 const MapDisplay: React.FC<MapDisplayProps> = ({ places, selectedPlaceId }) => {
   // Center map on selected place or first place
   const mapRef = useRef<any>(null);
+
+  // Log place view traffic
+  const logPlaceView = async (placeId: number) => {
+    try {
+      await fetch(`${API_BASE_URL}/api/traffic/place-view`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ placeId })
+      });
+    } catch (error) {
+      console.error('Error logging place view:', error);
+      // Don't show error to user as this is background logging
+    }
+  };
   const initialCenter: [number, number] = places.length > 0
     ? [places[0].latitude, places[0].longitude]
     : [28.9637, -13.5477]; // Center of Lanzarote
@@ -84,6 +101,9 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ places, selectedPlaceId }) => {
             key={place.id}
             position={[place.latitude, place.longitude]}
             {...(isSelected ? { icon: selectedIcon } : {})}
+            eventHandlers={{
+              click: () => logPlaceView(place.id)
+            }}
           >
             <Popup>
               <h3>{place.name}</h3>

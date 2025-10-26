@@ -8,6 +8,8 @@ import { Event } from './entity/Event';
 import { User } from './entity/User';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
+import reportsRoutes from './routes/reports';
+import { TrafficLogger } from './services/trafficLogger';
 import * as jwt from 'jsonwebtoken';
 import { authorizeRole } from './middleware/authorize';
 
@@ -51,6 +53,9 @@ app.use('/api/auth', authRoutes);
 
 // User routes
 app.use('/api/users', authenticateToken, authorizeRole(['Admin']), userRoutes);
+
+// Reports routes (Admin only)
+app.use('/api/reports', authenticateToken, authorizeRole(['Admin']), reportsRoutes);
 
 // Admin API endpoints - protected
 app.post('/api/activities', authenticateToken, authorizeRole(['Admin']), async (req, res) => {
@@ -249,6 +254,17 @@ app.get('/api/activities', async (req, res) => {
 
 app.get('/api/places', async (req, res) => {
   const { area, activity, day, nearMe } = req.query;
+  
+  // Log search traffic
+  const searchFilters = { area, activity, day, nearMe };
+  const searchQuery = area ? `Area: ${area}` : 'All areas';
+  await TrafficLogger.logSearch(searchQuery, searchFilters, req);
+  
+  // Log activity filter if specified
+  if (activity) {
+    await TrafficLogger.logActivityFilter(parseInt(activity as string), req);
+  }
+  
   const query = AppDataSource.getRepository(Place)
     .createQueryBuilder('place')
     .leftJoinAndSelect('place.events', 'event')
@@ -336,6 +352,22 @@ app.get('/api/admin/events', authenticateToken, authorizeRole(['Admin', 'Place O
   } catch (error) {
     console.error('Error fetching admin events:', error);
     res.status(500).json({ error: 'Failed to fetch admin events' });
+  }
+});
+
+// Log place view (called from frontend when a place is viewed)
+app.post('/api/traffic/place-view', async (req, res) => {
+  try {
+    const { placeId } = req.body;
+    if (!placeId) {
+      return res.status(400).json({ message: 'Place ID is required' });
+    }
+    
+    await TrafficLogger.logPlaceView(placeId, req);
+    res.json({ message: 'Place view logged successfully' });
+  } catch (error) {
+    console.error('Error logging place view:', error);
+    res.status(500).json({ message: 'Error logging place view' });
   }
 });
 

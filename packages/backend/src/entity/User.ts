@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { Role } from './Role';
 import { Place } from './Place';
+import { TrafficLog } from './TrafficLog';
 
 @Entity()
 export class User {
@@ -30,4 +31,7 @@ export class User {
 
   @OneToMany(() => Place, (place) => place.user)
   places!: Place[];
+
+  @OneToMany(() => TrafficLog, (trafficLog) => trafficLog.user)
+  trafficLogs!: TrafficLog[];
 }

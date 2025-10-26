@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne } from 'typeorm';
 import { Event } from './Event';
 import { User } from './User';
+import { TrafficLog } from './TrafficLog';
 
 @Entity()
 export class Place {
@@ -30,4 +31,7 @@ export class Place {
 
   @OneToMany(() => Event, (event) => event.place)
   events!: Event[];
+
+  @OneToMany(() => TrafficLog, (trafficLog) => trafficLog.place)
+  trafficLogs!: TrafficLog[];
 }

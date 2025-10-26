@@ -5,6 +5,7 @@ import EditEventModal from './EditEventModal';
 import UserAdminModal from './UserAdminModal';
 import UserSearch from './UserSearch';
 import UserDetailsModal from './UserDetailsModal';
+import ReportsPage from './ReportsPage';
 import Notification from './Notification';
 import { useAuth } from '../auth/AuthContext';
 import { API_BASE_URL } from '../config';
@@ -66,6 +67,7 @@ export default function AdminPage({ onMenuAction }: AdminPageProps) {
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
   const [isEditUser, setIsEditUser] = useState(false);
+  const [showReports, setShowReports] = useState(false);
   const [showUserDetails, setShowUserDetails] = useState(false);
   const [viewingUser, setViewingUser] = useState<UserData | null>(null);
   
@@ -303,6 +305,8 @@ export default function AdminPage({ onMenuAction }: AdminPageProps) {
     setIsHamburgerOpen(false);
     if (action === 'user-admin') {
       setShowUserSearch(true);
+    } else if (action === 'reports') {
+      setShowReports(true);
     } else if (onMenuAction) {
       onMenuAction(action);
     }
@@ -441,6 +445,9 @@ export default function AdminPage({ onMenuAction }: AdminPageProps) {
             </button>
             <button className="menu-item" onClick={() => handleMenuClick('user-admin')}>
               User Admin
+            </button>
+            <button className="menu-item" onClick={() => handleMenuClick('reports')}>
+              Reports
             </button>
             <button className="menu-item" onClick={logout}>
               Logout ({user?.username})
@@ -600,6 +607,10 @@ export default function AdminPage({ onMenuAction }: AdminPageProps) {
         }}
         user={viewingUser}
       />
+
+      {showReports && (
+        <ReportsPage />
+      )}
 
       <Notification
         message={notification.message}

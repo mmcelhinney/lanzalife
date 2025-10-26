@@ -4,6 +4,7 @@ import { Activity } from './entity/Activity';
 import { Event } from './entity/Event';
 import { User } from './entity/User';
 import { Role } from './entity/Role';
+import { TrafficLog } from './entity/TrafficLog';
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
@@ -14,7 +15,7 @@ export const AppDataSource = new DataSource({
   database: 'lanzalife',
   synchronize: true,
   logging: false,
-  entities: [Place, Activity, Event, User, Role],
+  entities: [Place, Activity, Event, User, Role, TrafficLog],
   migrations: [],
   subscribers: [],
 });
